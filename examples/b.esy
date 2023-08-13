@@ -1,0 +1,9 @@
+(terminal :putln :haha)
+(terminal :putln "SUII")
+
+[
+	(terminal :putln "OYE")
+	(block)
+] |block|
+
+(block)

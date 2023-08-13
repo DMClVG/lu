@@ -1,0 +1,41 @@
+terminal | t |
+
+(t :putln "hi doesn't exist")
+(t :putln :wow)
+
+(((:hahi :equal? :hahi) 
+:if [
+	(t :putln "POPOO KAKA")
+] :else [
+
+])
+
+(>i "I SAID")
+
+
+[ | x y |
+	(t :putln x)
+	(t :putln y)
+
+	3 2 1
+] | fn |
+
+(fn :old :and) | x y z |
+
+(t :putln "This is a programming language for ESY")
+
+(t :put x) (t :nl)
+(t :put y) (t :nl)
+(t :put z) (t :nl)
+
+(array :new) | myarray |
+
+(myarray :set 0 :howdy)
+(myarray :set 1 :mowdy)
+
+0 | i |
+(myarray :each [ | x |
+	(t :put i) (t :put " ")
+	(t :put x) (t :nl)
+	(i :succ) | i |
+])
