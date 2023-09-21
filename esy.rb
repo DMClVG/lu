@@ -52,6 +52,7 @@ class Esy
 			o	
 		end
 	end
+
 	def push o
 		@stack << o
 	end
@@ -108,6 +109,8 @@ env.define :halt, HaltObject.new
 env.define :nil, NilObject.new
 env.define :table, TableFactory.new
 env.define :array, ArrayFactory.new
+env.define :swap, SwapObject.new
+env.define :rot, RotObject.new
 
 m.push HaltObject.new
 m.push Forth::BlockObject.new env, tree
