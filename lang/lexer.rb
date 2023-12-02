@@ -49,6 +49,7 @@ module Lexer
 
   class TimesBlock < SingleBodyBlock
   end
+  class EachBlock < SingleBodyBlock; end
 
   class ThenElseBlock
     attr_reader  :then_body, :else_body
@@ -218,6 +219,10 @@ module Lexer
       match_and_consume_prefixed_block :then
     end
 
+    def match_and_consume_each
+      match_and_consume_prefixed_block :each
+    end
+
     def match_and_consume_times
       match_and_consume_prefixed_block :times
     end
@@ -265,6 +270,9 @@ module Lexer
         elsif not (until_block = match_and_consume_until).nil? then
 
           return Token.new until_block.condition_body.first, until_block.loop_body.last, until_block
+        elsif not (each_body = match_and_consume_each).nil? then
+
+          return Token.new each_body.first, each_body.last, EachBlock.new(each_body)
         else
           advance match_symbol
         end
@@ -305,30 +313,33 @@ module Lexer
     def consume_block
       skip_whitespace
 
-      open_bracket = (Token.new @s.position, @s.position+1, @s.char)
-      raise UnexpectedTokenException.new(open_bracket, "start of a new block") unless @s.char == '['
+      if @s.char == '[' then
+        open_bracket = (Token.new @s.position, @s.position+1, @s.char)
+        first = @s.position
+        @s.next # skip '['
 
-      first = @s.position
-      @s.next # skip '['
+        block = Array.new
 
-      block = Array.new
+        until @s.char == "]"
+          token = consume_token
+          abort if token.nil?
 
-      until @s.char == "]"
-        token = consume_token
-        abort if token.nil?
+          block << token
 
-        block << token
+          skip_whitespace
 
-        skip_whitespace
-
-        if @s.char == nil then
-          raise UnclosedBlockException.new open_bracket
+          if @s.char == nil then
+            raise UnclosedBlockException.new open_bracket
+          end
         end
-      end
 
-      @s.next # skip ']'
-      last = @s.position
-      Token.new first, last, block
+        @s.next # skip ']'
+        last = @s.position
+        Token.new first, last, block
+      else
+        token = consume_token
+        Token.new token.first, token.last, [ token ]
+      end
     end
   end
 

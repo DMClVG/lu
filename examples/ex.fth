@@ -1,10 +1,12 @@
 
 : happy [
-  104 emit
-  97 emit
-  112 emit
-  112 emit
-  121 emit
+\  104 emit
+\  97 emit
+\  112 emit
+\  112 emit
+\  121 emit
+\ or
+  "happy" chars each emit
 ]
 
 : smiley [
@@ -40,7 +42,7 @@
 
   3 2 + number newline
 
-  until [ true ] do [ happy ] \ never executed
+  until true do happy \ never executed :'(
 
   0 while [ dup 0 <> ] do [
     1 +

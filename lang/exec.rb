@@ -39,6 +39,9 @@ class Executor
           if m.pop != m.pop then m.push 1 else m.push 0 end
         when :'.s'
           puts " < " + m.read_stack + " > "
+        when :'chars'
+          s = m.pop
+          m.push s.chars
         when :'drop'
           m.pop
         when :'nip'
@@ -121,6 +124,13 @@ class Executor
     when TimesBlock
       n = m.pop
       n.times { execute_token token.value.body }
+    when EachBlock
+      it = m.pop
+      abort "not iterable" unless it.respond_to?(:each)
+      it.each { |e|
+        m.push e
+        execute_token token.value.body
+      }
     when WhileBlock
       while_block = token.value
       loop do
