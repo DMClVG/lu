@@ -16,7 +16,7 @@
 
 : no-more-line [ \ row
   hide
-  0 while 1 do [
+  0 loop [
     clear-line
 
     goto-left-center
@@ -36,16 +36,12 @@
     100 sleep
   ]
 ]
+: init-screen [
+  clear
+  0 0 goto
+]
 
 ! [
-  clear
-  \ clear
-  \ 0 0 goto
-  \ 2 times ok ":)" type nl
-
-  \ 0 rows goto
-
-  0 0 goto
-
+  init-screen
   no-more-line
 ]

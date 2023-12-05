@@ -38,6 +38,9 @@ module Lexer
     end
   end
 
+  class LoopBlock < SingleBodyBlock
+  end
+
   class ElseBlock < SingleBodyBlock
   end
 
@@ -211,6 +214,10 @@ module Lexer
       match_and_consume_prefixed_block :else
     end
 
+    def match_and_consume_loop
+      match_and_consume_prefixed_block :loop
+    end
+
     def match_and_consume_range
       match_and_consume_prefixed_block :range
     end
@@ -264,6 +271,9 @@ module Lexer
         elsif not (times_body = match_and_consume_times).nil? then
 
           return Token.new times_body.first, times_body.last, TimesBlock.new(times_body)
+        elsif not (loop_body = match_and_consume_loop).nil? then
+
+          return Token.new loop_body.first, loop_body.last, LoopBlock.new(loop_body)
         elsif not (while_block = match_and_consume_while).nil? then
 
           return Token.new while_block.condition_body.first, while_block.loop_body.last, while_block

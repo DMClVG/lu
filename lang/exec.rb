@@ -170,6 +170,10 @@ class Executor
       if @m.pop == 0 then
         execute_token token.value.body
       end
+    when LoopBlock
+      loop do
+        execute_token token.value.body
+      end
     when RangeBlock
       b, a = m.pop, m.pop
       (a...b).each { |i|
