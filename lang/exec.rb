@@ -1,4 +1,7 @@
 
+require "tty-cursor"
+require "tty-screen"
+
 class Executor
   include Lexer
 
@@ -20,6 +23,8 @@ class Executor
   def initialize machine, environment
     @m = machine
     @env = environment
+    @cursor = TTY::Cursor
+    @size = TTY::Screen.size
   end
 
   def execute_token token
@@ -39,9 +44,31 @@ class Executor
           if m.pop != m.pop then m.push 1 else m.push 0 end
         when :'.s'
           puts " < " + m.read_stack + " > "
+
+        when :'emit'
+          c = m.pop
+          print c.chr
+        when :'goto'
+          y,x = m.pop, m.pop
+          print @cursor.move_to x, y
+        when :'cols'
+          m.push @size[1]
+        when :'rows'
+          m.push @size[0]
+        when :'clear-line'
+          @cursor.clear_line
+        when :'hide'
+          print @cursor.hide
+        when :'clear'
+          print @cursor.clear_screen
+        when :sleep
+          ms = m.pop
+          sleep ms/1000.0
         when :'chars'
           s = m.pop
           m.push s.chars
+        when :length
+          m.push m.pop.length
         when :'drop'
           m.pop
         when :'nip'
@@ -90,13 +117,41 @@ class Executor
         when :'/'
           b, a = m.pop, m.pop
           m.push a / b
+        when :'>'
+          b, a = m.pop, m.pop
+          if a > b then
+            m.push 1
+          else
+            m.push 0
+          end
+        when :'<'
+          b, a = m.pop, m.pop
+          if a < b then
+            m.push 1
+          else
+            m.push 0
+          end
+        when :'>='
+          b, a = m.pop, m.pop
+          if a >= b then
+            m.push 1
+          else
+            m.push 0
+          end
+        when :'<='
+          b, a = m.pop, m.pop
+          if a <= b then
+            m.push 1
+          else
+            m.push 0
+          end
+        when :'mod'
+          b, a = m.pop, m.pop
+          m.push a % b
         when :'/mod'
           b, a = m.pop, m.pop
           m.push a % b
           m.push a / b
-        when :'emit'
-          c = m.pop
-          print c.chr
         when :'abort'
           abort
         else
