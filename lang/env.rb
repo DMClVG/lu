@@ -52,7 +52,7 @@ class Environment
 
       if token.value.is_a?(Symbol) and token.value == :':' then
         name = next_token_expect(Symbol, "expected name here").value
-        body = next_token_expect(Array, "expected word body here")
+        body = next_token
         define Word.new name, body
 
       elsif token.value.is_a?(Symbol) and token.value == :'@' then

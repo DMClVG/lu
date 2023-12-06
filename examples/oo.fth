@@ -3,10 +3,6 @@
   make [ name age ]
 ]
 
-: draw [
-  dup :x over :y goto 80 emit
-]
-
 : nl [ 10 emit ]
 : type [ chars each emit ]
 
@@ -16,11 +12,9 @@
   10 /mod dup 0 = then [ drop ] else [ number ] 48 + emit
 ]
 
-: person:print-info [
-  |> [
-    [ "Name: " type :name type nl ]
-    [ "Age: " type :age number nl ]
-  ]
+: person:print-info |> [
+  [ "Name: " type :name type nl ]
+  [ "Age: " type :age number nl ]
 ]
 
 ! [
