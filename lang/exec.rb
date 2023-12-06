@@ -215,7 +215,7 @@ class Executor
     when MakeBlock
       res = Hash.new
       fields = token.value.body.value
-      fields.each { |name|
+      fields.reverse.each { |name|
         abort "expected symbol" unless name.value.is_a?(Symbol)
         res[name.value] = m.pop
       }

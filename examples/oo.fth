@@ -1,6 +1,6 @@
 
 : person:new [
-  make [ name age ]
+  make [ age name ]
 ]
 
 : nl [ 10 emit ]
