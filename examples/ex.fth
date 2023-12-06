@@ -38,7 +38,7 @@
 : xor [ 2dup or -rot and not and ]
 
 ! [ \ entry point
-  0 12 range [ drop happy space ] newline
+  12 times [ happy space ] newline
 
   3 2 + number newline
 

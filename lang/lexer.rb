@@ -57,9 +57,6 @@ module Lexer
   class ThenBlock < SingleBodyBlock
   end
 
-  class RangeBlock < SingleBodyBlock
-  end
-
   class TimesBlock < SingleBodyBlock
   end
   class EachBlock < SingleBodyBlock; end
@@ -249,10 +246,6 @@ module Lexer
       match_and_consume_prefixed_block :make
     end
 
-    def match_and_consume_range
-      match_and_consume_prefixed_block :range
-    end
-
     def match_and_consume_then
       match_and_consume_prefixed_block :then
     end
@@ -294,10 +287,6 @@ module Lexer
         elsif not (else_body = match_and_consume_else).nil? then
 
           return Token.new else_body.first, else_body.last, ElseBlock.new(else_body)
-
-        elsif not (range_body = match_and_consume_range).nil? then
-
-          return Token.new range_body.first, range_body.last, RangeBlock.new(range_body)
 
         elsif not (times_body = match_and_consume_times).nil? then
 

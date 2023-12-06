@@ -13,7 +13,7 @@
   ] point
 ]
 
-: mk-range [ make [ a b ] ]
+: range [ make [ a b ] ]
 
 : in-range? [
   2 wrap |> [
@@ -23,11 +23,11 @@
 ]
 
 : x-in-screen? [
-  0 cols mk-range in-range?
+  0 cols range in-range?
 ]
 
 : y-in-screen? [
-  0 rows mk-range in-range?
+  0 rows range in-range?
 ]
 
 : in-screen? [

@@ -199,12 +199,6 @@ class Executor
       loop do
         execute_token token.value.body
       end
-    when RangeBlock
-      b, a = m.pop, m.pop
-      (a...b).each { |i|
-        m.push i
-        execute_token token.value.body
-      }
     when TimesBlock
       n = m.pop
       n.times { execute_token token.value.body }
