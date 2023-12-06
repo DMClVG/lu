@@ -215,6 +215,23 @@ class Executor
         m.push e
         execute_token token.value.body
       }
+    when MapBlock
+      it = m.pop
+      abort "not mappable" unless it.respond_to?(:map)
+      m.push (it.map { |e|
+        m.push e
+        execute_token token.value.body
+        m.pop
+      })
+    when ReduceBlock
+      it = m.pop
+      abort "not reducable" unless it.respond_to?(:reduce)
+      m.push (it.reduce(0) { |acc, x|
+        m.push acc
+        m.push x
+        execute_token token.value.body
+        m.pop
+      })
     when WhileBlock
       while_block = token.value
       loop do

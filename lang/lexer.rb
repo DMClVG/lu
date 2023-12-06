@@ -63,6 +63,8 @@ module Lexer
   class TimesBlock < SingleBodyBlock
   end
   class EachBlock < SingleBodyBlock; end
+  class MapBlock < SingleBodyBlock; end
+  class ReduceBlock < SingleBodyBlock; end
 
   class ThenElseBlock
     attr_reader  :then_body, :else_body
@@ -231,6 +233,14 @@ module Lexer
       match_and_consume_prefixed_block :loop
     end
 
+    def match_and_consume_map
+      match_and_consume_prefixed_block :map
+    end
+
+    def match_and_consume_reduce
+      match_and_consume_prefixed_block :reduce
+    end
+
     def match_and_consume_chain
       match_and_consume_prefixed_block :'|>'
     end
@@ -310,6 +320,12 @@ module Lexer
         elsif not (each_body = match_and_consume_each).nil? then
 
           return Token.new each_body.first, each_body.last, EachBlock.new(each_body)
+        elsif not (map_body = match_and_consume_map).nil? then
+
+          return Token.new map_body.first, map_body.last, MapBlock.new(map_body)
+        elsif not (reduce_body = match_and_consume_reduce).nil? then
+
+          return Token.new reduce_body.first, reduce_body.last, ReduceBlock.new(reduce_body)
         else
           symbol = match_symbol
           advance symbol

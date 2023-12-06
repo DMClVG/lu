@@ -1,3 +1,5 @@
+: type [ chars each emit ]
+: 2drop [ drop drop ]
 
 : tile make [ t p v ]
 : point make [ x y ]
@@ -6,21 +8,26 @@
 
 : +point [
   2 wrap |> [
-    [ unwrap :x swap :x + ]
-    [ unwrap :y swap :y + ]
+    [ map :x reduce + ]
+    [ map :y reduce + ]
   ] point
 ]
 
-: type [ chars each emit ]
-: 2dup [ over over ]
-: 2drop [ drop drop ]
+: mk-range [ make [ a b ] ]
+
+: in-range? [
+  2 wrap |> [
+    [ unwrap :a >= ]
+    [ unwrap :b < ]
+  ] and
+]
 
 : x-in-screen? [
-  |> [ [ 0 >= ] [ cols < ] ] and
+  0 cols mk-range in-range?
 ]
 
 : y-in-screen? [
-  |> [ [ 0 >= ] [ rows < ] ] and
+  0 rows mk-range in-range?
 ]
 
 : in-screen? [
@@ -52,7 +59,7 @@
   init-screen
 
   "Q" 9 0 point 1 0 point tile
-  "A" 19 0 point -1 1 point tile
+  "A" 19 0 point -1 0 point tile
 
   loop [
     clear
