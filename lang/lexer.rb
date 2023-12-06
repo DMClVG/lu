@@ -48,6 +48,9 @@ module Lexer
   class LoopBlock < SingleBodyBlock
   end
 
+  class ChainBlock < SingleBodyBlock
+  end
+
   class ElseBlock < SingleBodyBlock
   end
 
@@ -228,6 +231,10 @@ module Lexer
       match_and_consume_prefixed_block :loop
     end
 
+    def match_and_consume_chain
+      match_and_consume_prefixed_block :'|>'
+    end
+
     def match_and_consume_make
       match_and_consume_prefixed_block :make
     end
@@ -291,6 +298,9 @@ module Lexer
         elsif not (make_body = match_and_consume_make).nil? then
 
           return Token.new make_body.first, make_body.last, MakeBlock.new(make_body)
+        elsif not (chain_body = match_and_consume_chain).nil? then
+
+          return Token.new chain_body.first, chain_body.last, ChainBlock.new(chain_body)
         elsif not (while_block = match_and_consume_while).nil? then
 
           return Token.new while_block.condition_body.first, while_block.loop_body.last, while_block
@@ -328,7 +338,7 @@ module Lexer
     end
 
     def match_symbol
-      match /\A[=<>\/\w\d\.@:&$%\?\*\^_\+\-#]+/, Proc.new { |matched|
+      match /\A[=<>|\/\w\d\.@:&$%\?\*\^_\+\-#]+/, Proc.new { |matched|
         if /\A[-+]?\d+\z/ === matched then
           matched.to_i
         else

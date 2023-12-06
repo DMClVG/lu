@@ -214,13 +214,10 @@ class Executor
       end
     when MakeBlock
       res = Hash.new
-      description = token.value.body.value
-      description.each_slice(2) { |field|
-        field_name = field[0]
-        abort "expected symbol" unless field_name.value.is_a?(Symbol)
-        field_body = field[1]
-        execute_token field_body
-        res[field_name.value] = m.pop
+      fields = token.value.body.value
+      fields.each { |name|
+        abort "expected symbol" unless name.value.is_a?(Symbol)
+        res[name.value] = m.pop
       }
       m.push res
     when AccessSymbol
@@ -233,6 +230,12 @@ class Executor
         break if m.pop == 1
         execute_token until_block.loop_body
       end
+    when ChainBlock
+      v = m.pop
+      token.value.body.value.each { |part|
+        m.push v
+        execute_token part
+      }
     when ThenElseBlock
       if @m.pop != 0 then
         execute_token token.value.then_body
