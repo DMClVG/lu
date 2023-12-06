@@ -74,6 +74,16 @@ class Executor
         when :'nip'
           m.swap
           m.pop
+        when :'wrap'
+          count = m.pop
+          tuple = Array.new
+          count.times {
+            tuple.unshift m.pop
+          }
+          m.push tuple
+        when :'unwrap'
+          top = m.pop
+          top.each { |v| m.push v }
         when :'tuck'
           m.swap
           m.pick 1

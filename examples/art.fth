@@ -1,6 +1,19 @@
 
-: tile:new [ make [ t x y vx vy ] ]
+: tile make [ t p v ]
+: point make [ x y ]
+
+: point:unwrap |> [ :x :y ]
+
+: +point [
+  2 wrap |> [
+    [ unwrap :x swap :x + ]
+    [ unwrap :y swap :y + ]
+  ] point
+]
+
 : type [ chars each emit ]
+: 2dup [ over over ]
+: 2drop [ drop drop ]
 
 : x-in-screen? [
   |> [ [ 0 >= ] [ cols < ] ] and
@@ -11,21 +24,15 @@
 ]
 
 : in-screen? [
-  y-in-screen? swap x-in-screen? and
-]
-
-: 2dup [
-  over over
-]
-
-: 2drop [
-  drop drop
+  |> [
+    [ :x x-in-screen? ]
+    [ :y y-in-screen? ]
+  ] and
 ]
 
 : draw [
-  |> [ :t :x :y ]
-  2dup in-screen?
-  then [ goto type ] else [ 2drop drop ]
+  |> [ :t :p ]
+  dup in-screen? then [ point:unwrap goto type ] else [ 2drop ]
 ]
 
 : init-screen [
@@ -33,25 +40,19 @@
   hide
 ]
 
-: negate [
-  0 swap -
-]
-
 : move [
   |> [
     :t
-    [ |> [ :x :vx ] + ]
-    [ |> [ :y :vy ] + ]
-    :vx
-    :vy
-  ] tile:new
+    [ |> [ :p :v ] +point ]
+    :v
+  ] tile
 ]
 
 ! [
   init-screen
 
-  "Q" 9 0 1 0 tile:new
-  "A" 19 0 1 negate 0 tile:new
+  "Q" 9 0 point 1 0 point tile
+  "A" 19 0 point -1 1 point tile
 
   loop [
     clear
