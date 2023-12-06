@@ -1,8 +1,8 @@
 : inside-line? [
-  dup 0 >=
-  swap
-  cols <
-  and
+  |> [
+    [ 0 >= ]
+    [ cols < ]
+  ] and
 ]
 
 : goto-left-center [ 0 rows 2 / goto ]
