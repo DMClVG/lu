@@ -1,16 +1,9 @@
-: nl [ 10 emit ]
-
-: type [ chars each emit ]
-
-: space [ " " type ]
-
-: ok [ "ok" type space ]
-
-: 3dup [
-  2 pick 2 pick 2 pick
+: inside-line? [
+  dup 0 >=
+  swap
+  cols <
+  and
 ]
-
-: inside-line? [ dup 0 >= swap cols < and ]
 
 : goto-left-center [ 0 rows 2 / goto ]
 
@@ -33,7 +26,7 @@
     ] drop
 
     1 -
-    100 sleep
+    80 sleep
   ]
 ]
 : init-screen [

@@ -38,6 +38,13 @@ module Lexer
     end
   end
 
+  class AccessSymbol
+    attr_reader :name
+    def initialize name
+      @name = name
+    end
+  end
+
   class LoopBlock < SingleBodyBlock
   end
 
@@ -91,6 +98,9 @@ module Lexer
     def == other
       other.is_a?(UntilBlock) and other.condition_body == @condition_body and other.loop_body == @loop_body
     end
+  end
+
+  class MakeBlock < SingleBodyBlock
   end
 
   class DoOp
@@ -218,6 +228,10 @@ module Lexer
       match_and_consume_prefixed_block :loop
     end
 
+    def match_and_consume_make
+      match_and_consume_prefixed_block :make
+    end
+
     def match_and_consume_range
       match_and_consume_prefixed_block :range
     end
@@ -274,6 +288,9 @@ module Lexer
         elsif not (loop_body = match_and_consume_loop).nil? then
 
           return Token.new loop_body.first, loop_body.last, LoopBlock.new(loop_body)
+        elsif not (make_body = match_and_consume_make).nil? then
+
+          return Token.new make_body.first, make_body.last, MakeBlock.new(make_body)
         elsif not (while_block = match_and_consume_while).nil? then
 
           return Token.new while_block.condition_body.first, while_block.loop_body.last, while_block
@@ -284,7 +301,13 @@ module Lexer
 
           return Token.new each_body.first, each_body.last, EachBlock.new(each_body)
         else
-          advance match_symbol
+          symbol = match_symbol
+          advance symbol
+          if symbol.value.to_s != ":" and symbol.value.to_s.start_with? ":" then
+            return Token.new symbol.first, symbol.last, AccessSymbol.new(symbol.value.to_s[1..].to_sym)
+          else
+            return symbol
+          end
         end
       end
     end

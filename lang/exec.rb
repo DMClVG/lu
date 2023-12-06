@@ -52,9 +52,9 @@ class Executor
           y,x = m.pop, m.pop
           print @cursor.move_to x, y
         when :'cols'
-          m.push @size[1]
+          m.push TTY::Screen.size[1]
         when :'rows'
-          m.push @size[0]
+          m.push TTY::Screen.size[0]
         when :'clear-line'
           @cursor.clear_line
         when :'hide'
@@ -155,9 +155,24 @@ class Executor
         when :'abort'
           abort
         else
-          raise UndefinedWordException.new token unless @env.words.key? token.value
-          word = @env.words[token.value]
-          execute_token word.body
+          if @env.structs.key? token.value
+            struct = @env.structs[token.value]
+            m.push struct
+          elsif @env.words.key? token.value
+            word = @env.words[token.value]
+            execute_token word.body
+          else
+            top = m.peek 0
+            if top.is_a?(Environment::Struct) then
+              if top.words.key? token.value then
+
+                execute_token top.words[token.value].body
+                return
+              end
+            end
+
+            raise UndefinedWordException.new token
+          end
         end
       rescue Sy::StackUnderflowException => e
         raise StackUnderflowException.new token
@@ -197,6 +212,20 @@ class Executor
         break unless m.pop == 1
         execute_token while_block.loop_body
       end
+    when MakeBlock
+      res = Hash.new
+      description = token.value.body.value
+      description.each_slice(2) { |field|
+        field_name = field[0]
+        abort "expected symbol" unless field_name.value.is_a?(Symbol)
+        field_body = field[1]
+        execute_token field_body
+        res[field_name.value] = m.pop
+      }
+      m.push res
+    when AccessSymbol
+      top = m.pop
+      m.push top[token.value.name]
     when UntilBlock
       until_block = token.value
       loop do
