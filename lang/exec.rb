@@ -45,6 +45,8 @@ class Executor
         when :'.s'
           puts " < " + m.read_stack + " > "
 
+        when :'sqrt'
+          m.push Math.sqrt(m.pop)
         when :'emit'
           c = m.pop
           print c.chr
@@ -83,7 +85,11 @@ class Executor
           m.push tuple
         when :'unwrap'
           top = m.pop
-          top.each { |v| m.push v }
+          if top.respond_to?(:each) then
+            top.each { |v| m.push v }
+          else
+            m.push top # do nothing :)
+          end
         when :'tuck'
           m.swap
           m.pick 1
@@ -186,6 +192,22 @@ class Executor
         end
       rescue Sy::StackUnderflowException => e
         raise StackUnderflowException.new token
+      end
+    when WrapBlock
+      stack_depth_before = m.stack_depth
+      execute_token token.value.body
+      stack_depth_after = m.stack_depth
+
+      elements = [0, stack_depth_after - stack_depth_before].max
+
+      if elements <= 1 then
+        # do nothing
+      else
+        wrap = Array.new
+        elements.times {
+          wrap.unshift m.pop
+        }
+        m.push wrap
       end
     when ThenBlock
       if @m.pop != 0 then

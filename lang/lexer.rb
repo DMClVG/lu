@@ -105,6 +105,9 @@ module Lexer
   class MakeBlock < SingleBodyBlock
   end
 
+  class WrapBlock < SingleBodyBlock
+  end
+
   class DoOp
     def == other
       other.is_a?(DoOp)
@@ -273,6 +276,9 @@ module Lexer
         advance(Token.new @s.position, @s.position + 1, DoOp.new)
       when '['
         consume_block
+      when '('
+        tk = consume_block
+        return Token.new tk.first, tk.last, WrapBlock.new(tk)
       when '"'
         advance match_string
       else
@@ -361,14 +367,15 @@ module Lexer
     def consume_block
       skip_whitespace
 
-      if @s.char == '[' then
+      if @s.char == '[' or @s.char == '(' then
         open_bracket = (Token.new @s.position, @s.position+1, @s.char)
         first = @s.position
         @s.next # skip '['
 
         block = Array.new
 
-        until @s.char == "]"
+        skip_whitespace
+        until @s.char == "]" or @s.char == ")"
           token = consume_token
           abort if token.nil?
 

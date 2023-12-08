@@ -28,6 +28,10 @@ class Sy
     val.strip
 	end
 
+  def stack_depth
+    @stack.length
+  end
+
   def symbol name
     name
   end
