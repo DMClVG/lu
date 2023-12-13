@@ -17,9 +17,10 @@ module Lexer
   end
 
   class Token
-    attr_reader :first, :last, :value
+    attr_reader :source, :first, :last, :value
 
-    def initialize first, last, value
+    def initialize source, first, last, value
+      @source = source
       @value = value
       @first = first
       @last = last
@@ -45,26 +46,28 @@ module Lexer
     end
   end
 
-  class LoopBlock < SingleBodyBlock
+  class RequireDirective
+    attr_reader :mod
+    def initialize mod
+      @mod = mod
+    end
   end
 
-  class ChainBlock < SingleBodyBlock
-  end
-
-  class ElseBlock < SingleBodyBlock
-  end
-
-  class ThenBlock < SingleBodyBlock
-  end
-
-  class TimesBlock < SingleBodyBlock
-  end
+  class LoopBlock < SingleBodyBlock; end
+  class ChainBlock < SingleBodyBlock; end
+  class ElseBlock < SingleBodyBlock; end
+  class ThenBlock < SingleBodyBlock; end
+  class TimesBlock < SingleBodyBlock; end
   class EachBlock < SingleBodyBlock; end
   class MapBlock < SingleBodyBlock; end
   class ReduceBlock < SingleBodyBlock; end
+  class FoldLeftBlock < SingleBodyBlock; end
+  class FoldRightBlock < SingleBodyBlock; end
+  class MakeBlock < SingleBodyBlock; end
+  class WrapBlock < SingleBodyBlock; end
 
   class ThenElseBlock
-    attr_reader  :then_body, :else_body
+    attr_reader :then_body, :else_body
 
     def initialize then_body, else_body
       @then_body = then_body
@@ -100,12 +103,6 @@ module Lexer
     def == other
       other.is_a?(UntilBlock) and other.condition_body == @condition_body and other.loop_body == @loop_body
     end
-  end
-
-  class MakeBlock < SingleBodyBlock
-  end
-
-  class WrapBlock < SingleBodyBlock
   end
 
   class DoOp
@@ -154,21 +151,26 @@ module Lexer
   end
 
   class Tokenizer
-    def initialize(s)
-      @s = StringIterator.new s
+    def initialize(source)
+      @source = source
+      @s = StringIterator.new source.string
+    end
+
+    def token first, last, value
+      Token.new @source, first, last, value
     end
 
     def tokenize
       tree = Array.new
 
       until @s.char == nil
-        token = consume_token
-        abort if token.nil?
-        tree << token
+        tk = consume_token
+        abort if tk.nil?
+        tree << tk
         skip_whitespace
       end
 
-      Token.new @s.first, @s.last, tree
+      token @s.first, @s.last, tree
     end
 
     def skip_whitespace
@@ -179,9 +181,9 @@ module Lexer
       @s.next until @s.char == "\n"
     end
 
-    def advance token
-      @s.jump token.last
-      token
+    def advance tk
+      @s.jump tk.last
+      tk
     end
 
     def match_and_consume_prefixed_block sym
@@ -200,6 +202,19 @@ module Lexer
       tk = match_symbol
       raise UnexpectedTokenException.new tk, sym.to_s if tk.value != sym
       advance tk
+    end
+
+    def match_and_consume_require
+        tk = match_symbol
+        return nil if tk.nil?
+
+        if tk.value == :require then
+          advance tk
+          mod = advance match_string
+          return token tk.first, mod.last, RequireDirective.new(mod)
+        else
+          return nil
+        end
     end
 
     def match_and_consume_prefixed_condition_do_body class_constructor, prefix
@@ -257,6 +272,14 @@ module Lexer
       match_and_consume_prefixed_block :each
     end
 
+    def match_and_consume_fold_left
+      match_and_consume_prefixed_block :'fold-left'
+    end
+
+    def match_and_consume_fold_right
+      match_and_consume_prefixed_block :'fold-right'
+    end
+
     def match_and_consume_times
       match_and_consume_prefixed_block :times
     end
@@ -273,59 +296,67 @@ module Lexer
       when nil
         abort "FIXME"
       when '!'
-        advance(Token.new @s.position, @s.position + 1, DoOp.new)
+        advance(token @s.position, @s.position + 1, DoOp.new)
       when '['
         consume_block
       when '('
         tk = consume_block
-        return Token.new tk.first, tk.last, WrapBlock.new(tk)
+        return token tk.first, tk.last, WrapBlock.new(tk)
       when '"'
         advance match_string
       else
         if not (then_body = match_and_consume_then).nil? then
           if not (else_body = match_and_consume_else).nil? then
 
-            return Token.new then_body.first, else_body.last, ThenElseBlock.new(then_body, else_body)
+            return token then_body.first, else_body.last, ThenElseBlock.new(then_body, else_body)
           else
 
-            return Token.new then_body.first, then_body.last, ThenBlock.new(then_body)
+            return token then_body.first, then_body.last, ThenBlock.new(then_body)
           end
         elsif not (else_body = match_and_consume_else).nil? then
 
-          return Token.new else_body.first, else_body.last, ElseBlock.new(else_body)
+          return token else_body.first, else_body.last, ElseBlock.new(else_body)
 
         elsif not (times_body = match_and_consume_times).nil? then
 
-          return Token.new times_body.first, times_body.last, TimesBlock.new(times_body)
+          return token times_body.first, times_body.last, TimesBlock.new(times_body)
         elsif not (loop_body = match_and_consume_loop).nil? then
 
-          return Token.new loop_body.first, loop_body.last, LoopBlock.new(loop_body)
+          return token loop_body.first, loop_body.last, LoopBlock.new(loop_body)
         elsif not (make_body = match_and_consume_make).nil? then
 
-          return Token.new make_body.first, make_body.last, MakeBlock.new(make_body)
+          return token make_body.first, make_body.last, MakeBlock.new(make_body)
         elsif not (chain_body = match_and_consume_chain).nil? then
 
-          return Token.new chain_body.first, chain_body.last, ChainBlock.new(chain_body)
+          return token chain_body.first, chain_body.last, ChainBlock.new(chain_body)
         elsif not (while_block = match_and_consume_while).nil? then
 
-          return Token.new while_block.condition_body.first, while_block.loop_body.last, while_block
+          return token while_block.condition_body.first, while_block.loop_body.last, while_block
         elsif not (until_block = match_and_consume_until).nil? then
 
-          return Token.new until_block.condition_body.first, until_block.loop_body.last, until_block
+          return token until_block.condition_body.first, until_block.loop_body.last, until_block
         elsif not (each_body = match_and_consume_each).nil? then
 
-          return Token.new each_body.first, each_body.last, EachBlock.new(each_body)
+          return token each_body.first, each_body.last, EachBlock.new(each_body)
         elsif not (map_body = match_and_consume_map).nil? then
 
-          return Token.new map_body.first, map_body.last, MapBlock.new(map_body)
+          return token map_body.first, map_body.last, MapBlock.new(map_body)
         elsif not (reduce_body = match_and_consume_reduce).nil? then
 
-          return Token.new reduce_body.first, reduce_body.last, ReduceBlock.new(reduce_body)
+          return token reduce_body.first, reduce_body.last, ReduceBlock.new(reduce_body)
+        elsif not (fold_body = match_and_consume_fold_left).nil? then
+
+          return token fold_body.first, fold_body.last, FoldLeftBlock.new(fold_body)
+        elsif not (fold_body = match_and_consume_fold_right).nil? then
+
+          return token fold_body.first, fold_body.last, FoldRightBlock.new(fold_body)
+        elsif not (require_directive = match_and_consume_require).nil? then
+          return require_directive
         else
           symbol = match_symbol
           advance symbol
           if symbol.value.to_s != ":" and symbol.value.to_s.start_with? ":" then
-            return Token.new symbol.first, symbol.last, AccessSymbol.new(symbol.value.to_s[1..].to_sym)
+            return token symbol.first, symbol.last, AccessSymbol.new(symbol.value.to_s[1..].to_sym)
           else
             return symbol
           end
@@ -345,7 +376,7 @@ module Lexer
       last = @s.position + matched.length
       value = block.call(matched)
 
-      Token.new first, last, value
+      token first, last, value
     end
 
     def match_symbol
@@ -368,7 +399,7 @@ module Lexer
       skip_whitespace
 
       if @s.char == '[' or @s.char == '(' then
-        open_bracket = (Token.new @s.position, @s.position+1, @s.char)
+        open_bracket = (token @s.position, @s.position+1, @s.char)
         first = @s.position
         @s.next # skip '['
 
@@ -376,10 +407,10 @@ module Lexer
 
         skip_whitespace
         until @s.char == "]" or @s.char == ")"
-          token = consume_token
-          abort if token.nil?
+          tk = consume_token
+          abort if tk.nil?
 
-          block << token
+          block << tk
 
           skip_whitespace
 
@@ -390,10 +421,10 @@ module Lexer
 
         @s.next # skip ']'
         last = @s.position
-        Token.new first, last, block
+        token first, last, block
       else
-        token = consume_token
-        Token.new token.first, token.last, [ token ]
+        tk = consume_token
+        token tk.first, tk.last, [ tk ]
       end
     end
   end

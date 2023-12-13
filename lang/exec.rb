@@ -171,22 +171,10 @@ class Executor
         when :'abort'
           abort
         else
-          if @env.structs.key? token.value
-            struct = @env.structs[token.value]
-            m.push struct
-          elsif @env.words.key? token.value
+          if @env.words.key? token.value
             word = @env.words[token.value]
             execute_token word.body
           else
-            top = m.peek 0
-            if top.is_a?(Environment::Struct) then
-              if top.words.key? token.value then
-
-                execute_token top.words[token.value].body
-                return
-              end
-            end
-
             raise UndefinedWordException.new token
           end
         end
@@ -239,15 +227,26 @@ class Executor
         execute_token token.value.body
         m.pop
       })
-    when ReduceBlock
+    when FoldLeftBlock
+      acc = m.pop
       it = m.pop
-      abort "not reducable" unless it.respond_to?(:reduce)
-      m.push (it.reduce(0) { |acc, x|
+      abort "not iterator" unless it.respond_to?(:each)
+      it.each { |x|
         m.push acc
         m.push x
         execute_token token.value.body
-        m.pop
-      })
+        acc = m.pop
+      }
+    when FoldRightBlock
+      acc = m.pop
+      it = m.pop
+      abort "not iterator" unless it.respond_to?(:reverse_each)
+      it.reverse_each { |x|
+        m.push acc
+        m.push x
+        execute_token token.value.body
+        acc = m.pop
+      }
     when WhileBlock
       while_block = token.value
       loop do
@@ -297,6 +296,6 @@ class Executor
   end
 
   def execute
-    execute_token @env.entry
+    execute_token @env.entry.body
   end
 end

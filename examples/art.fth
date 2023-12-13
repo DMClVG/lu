@@ -1,5 +1,4 @@
-: type [ chars each emit ]
-: 2drop [ drop drop ]
+require "examples.base"
 
 : tile make [ t p v ]
 : point make [ x y ]

@@ -1,41 +1,8 @@
+require "examples.base"
 
 : happy [
-\  104 emit
-\  97 emit
-\  112 emit
-\  112 emit
-\  121 emit
-\ or
   "happy" chars each emit
 ]
-
-: smiley [
-  58 emit
-  41 emit
-]
-
-\ special ASCII-codes
-: newline [ 10 emit ]
-: space [ 32 emit ]
-
-\ boolean logic
-: true [ 1 ]
-: false [ 0 ]
-: zero? [ 0 = ]
-: not [ 0 = ]
-
-: digit [
-  48 + emit
-]
-
-: number [ \ prints a number in base10
-  10 /mod dup zero? then [ drop ] else [ number ] digit
-]
-
-: negate [ 0 swap - ]
-: 2dup [ over over ]
-
-: xor [ 2dup or -rot and not and ]
 
 ! [ \ entry point
   12 times [ happy space ] newline

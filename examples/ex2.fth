@@ -1,6 +1,4 @@
-
-: square [ dup * ]
-: negate [ 0 swap - ]
+require "examples.base"
 
 : compute-delta [
   unwrap swap \ a c b

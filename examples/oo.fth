@@ -1,15 +1,7 @@
+require "examples.base"
 
 : person:new [
   make [ age name ]
-]
-
-: nl [ 10 emit ]
-: type [ chars each emit ]
-
-: space [ 32 emit ]
-
-: number [ \ prints a number in base10
-  10 /mod dup 0 = then [ drop ] else [ number ] 48 + emit
 ]
 
 : person:print-info |> [
