@@ -1,6 +1,6 @@
 require "awesome_print"
 
-class Sy
+class Lu
 
   class StackUnderflowException < StandardError; end
 

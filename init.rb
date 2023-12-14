@@ -1,7 +1,7 @@
 require "colorize"
 require "pathname"
 
-require_relative "sy"
+require_relative "lu"
 require_relative "lang/lexer"
 require_relative "lang/env"
 require_relative "lang/exec"
@@ -93,7 +93,7 @@ end
 
 
 begin
-  m = Sy.new
+  m = Lu.new
   Executor.new(m, env).execute
 rescue Executor::ExecutionException => e
   puts ""
